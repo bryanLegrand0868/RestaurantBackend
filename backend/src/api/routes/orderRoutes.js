@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const orderController = require('../controllers/orderController');
-const auth = require('../middleware/auth');
+const { authenticate } = require('../middleware/auth'); // Import the authenticate function
 
 // Protected routes
-router.use(auth);
+router.use(authenticate); // Use the correct middleware name
 
 // Order operations
 router.post('/', orderController.createOrder);

@@ -6,11 +6,11 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
-// User Model
+// Update User model
 model User {
   id           Int      @id @default(autoincrement())
   name         String
@@ -22,7 +22,8 @@ model User {
   updatedAt    DateTime @updatedAt
 
   // Relations
-  orders       Order[]
+  orders  Order[]
+  reviews Review[]
 }
 
 // Admin Model with different roles
@@ -30,12 +31,12 @@ model Admin {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String
-  role      String   // SUPER_ADMIN, KITCHEN_MANAGER, CUSTOMER_SUPPORT, CONTENT_MANAGER
+  role      String // SUPER_ADMIN, KITCHEN_MANAGER, CUSTOMER_SUPPORT, CONTENT_MANAGER
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  logs      AdminLog[]
+  logs AdminLog[]
 }
 
 // Admin activity logs
@@ -47,7 +48,7 @@ model AdminLog {
   createdAt DateTime @default(now())
 
   // Relations
-  admin     Admin    @relation(fields: [adminId], references: [id])
+  admin Admin @relation(fields: [adminId], references: [id])
 }
 
 // Dish Categories
@@ -60,7 +61,7 @@ model Category {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  dishes      Dish[]
+  dishes Dish[]
 }
 
 // Dishes/Menu Items
@@ -70,13 +71,13 @@ model Dish {
   description String
   price       Float
   imageUrl    String
-  dietary     String[] // Array of dietary tags like "Vegetarian", "Vegan", "Gluten-Free"
+  dietary     String?  // Store as comma-separated string
   categoryId  Int
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
-  category    Category    @relation(fields: [categoryId], references: [id])
+  category    Category     @relation(fields: [categoryId], references: [id])
   ingredients Ingredient[]
   orderItems  OrderItem[]
 }
@@ -92,72 +93,75 @@ model Ingredient {
   updatedAt DateTime @updatedAt
 
   // Relations
-  dish      Dish     @relation(fields: [dishId], references: [id])
+  dish Dish @relation(fields: [dishId], references: [id])
 }
 
-// Orders
+// Update Order model
 model Order {
-  id              Int       @id @default(autoincrement())
+  id              Int      @id @default(autoincrement())
   userId          Int
-  status          String    // PENDING, PREPARING, READY, DELIVERING, DELIVERED, CANCELLED
+  status          String // PENDING, PREPARING, READY, DELIVERING, DELIVERED, CANCELLED
   totalAmount     Float
   deliveryAddress String
   deliveryFee     Float
-  paymentStatus   String    // PENDING, COMPLETED, FAILED
-  paymentMethod   String    // CASH, CARD, ONLINE
+  paymentStatus   String // PENDING, COMPLETED, FAILED
+  paymentMethod   String // CASH, CARD, ONLINE
   notes           String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
-  user            User      @relation(fields: [userId], references: [id])
-  orderItems      OrderItem[]
+  user       User        @relation(fields: [userId], references: [id])
+  orderItems OrderItem[]
+  reviews    Review[]
+  AuthUser   AuthUser?   @relation(fields: [authUserId], references: [id])
+  authUserId Int?
 }
 
 // Order Items
 model OrderItem {
-  id          Int      @id @default(autoincrement())
-  orderId     Int
-  dishId      Int
-  quantity    Int
-  price       Float
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  orderId   Int
+  dishId    Int
+  quantity  Int
+  price     Float
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  order       Order    @relation(fields: [orderId], references: [id])
-  dish        Dish     @relation(fields: [dishId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
+  dish  Dish  @relation(fields: [dishId], references: [id])
 }
 
-// Reviews
+// Update Review model
 model Review {
-  id          Int      @id @default(autoincrement())
-  userId      Int
-  orderId     Int
-  rating      Int      @default(0)
-  comment     String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  orderId   Int
+  rating    Int      @default(0)
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user        User     @relation(fields: [userId], references: [id])
-  order       Order    @relation(fields: [orderId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
 }
 
-// User Model for authentication system
+// Update AuthUser model
 model AuthUser {
-  id            Int      @id @default(autoincrement())
-  email         String   @unique
-  password      String
-  name          String
-  role          Role     @default(CUSTOMER)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  orders        Order[]
-  address       String?
-  phone         String?
-  profileImage  String?
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  name         String
+  role         Role     @default(CUSTOMER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  orders       Order[]
+  address      String?
+  phone        String?
+  profileImage String?
 
   @@index([email])
 }
