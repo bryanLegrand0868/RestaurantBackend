@@ -99,37 +99,50 @@ model Ingredient {
 model Order {
   id              Int       @id @default(autoincrement())
   userId          Int
-  status          String    // PENDING, CONFIRMED, PREPARING, READY_FOR_DELIVERY, OUT_FOR_DELIVERY, DELIVERED, CANCELLED
-  totalPrice      Float
+  status          String    // PENDING, PREPARING, READY, DELIVERING, DELIVERED, CANCELLED
+  totalAmount     Float
   deliveryAddress String
-  paymentMethod   String
+  deliveryFee     Float
+  paymentStatus   String    // PENDING, COMPLETED, FAILED
+  paymentMethod   String    // CASH, CARD, ONLINE
   notes           String?
-  statusNote      String?   // For admin notes on status changes
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  completedAt     DateTime? // When the order was delivered or cancelled
 
   // Relations
-  user            User       @relation(fields: [userId], references: [id])
+  user            User      @relation(fields: [userId], references: [id])
   orderItems      OrderItem[]
-
-  // Index for auto-deleting orders older than 30 days
-  @@index([createdAt(sort: Desc)])
 }
 
-// Order Items (individual dishes in an order)
+// Order Items
 model OrderItem {
-  id         Int      @id @default(autoincrement())
-  orderId    Int
-  dishId     Int
-  quantity   Int
-  extras     String[]  // Additional ingredients/toppings
-  exclusions String[]  // Ingredients to exclude
-  createdAt  DateTime @default(now())
+  id          Int      @id @default(autoincrement())
+  orderId     Int
+  dishId      Int
+  quantity    Int
+  price       Float
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relations
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  dish       Dish     @relation(fields: [dishId], references: [id])
+  order       Order    @relation(fields: [orderId], references: [id])
+  dish        Dish     @relation(fields: [dishId], references: [id])
+}
+
+// Reviews
+model Review {
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  orderId     Int
+  rating      Int      @default(0)
+  comment     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user        User     @relation(fields: [userId], references: [id])
+  order       Order    @relation(fields: [orderId], references: [id])
 }
 
 // User Model for authentication system
